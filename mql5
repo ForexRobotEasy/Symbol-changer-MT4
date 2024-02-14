@@ -1,0 +1,120 @@
+mql5
+//+------------------------------------------------------------------+
+//|                                              Symbol changer MT4  |
+//|                                      Developed by Forex Robot Easy Team |
+//|                                          www.forexroboteasy.com |
+//+------------------------------------------------------------------+
+
+// Define global variables
+input int xPos = 10; // X position of the tool's interface
+input int yPos = 20; // Y position of the tool's interface
+input int size = 12; // Size of the tool's interface
+input color textColor = clrWhite; // Color of the text
+
+//+------------------------------------------------------------------+
+//|                     Expert initialization function               |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+    // Create the Symbol Changer MT4 tool interface
+    CreateInterface();
+
+    return(INIT_SUCCEEDED);
+}
+
+//+------------------------------------------------------------------+
+//|                   Expert deinitialization function               |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+    // Remove the Symbol Changer MT4 tool interface
+    RemoveInterface();
+}
+
+//+------------------------------------------------------------------+
+//|                     Expert tick function                          |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+    // Check if a symbol switch is requested
+    if(IsPressed())
+    {
+        // Switch to the next symbol
+        SwitchSymbol();
+    }
+}
+
+//+------------------------------------------------------------------+
+//|                 Create the Symbol Changer interface               |
+//+------------------------------------------------------------------+
+void CreateInterface()
+{
+    // Create a chart label for the tool's interface
+    ObjectCreate(0, 'SymbolChangerLabel', OBJ_LABEL, 0, 0, 0);
+    ObjectSetText(0, 'Symbol Changer', size, 'Arial', textColor);
+    ObjectSet('SymbolChangerLabel', OBJPROP_CORNER, CORNER_LEFT_UPPER);
+    ObjectSet('SymbolChangerLabel', OBJPROP_XDISTANCE, xPos);
+    ObjectSet('SymbolChangerLabel', OBJPROP_YDISTANCE, yPos);
+}
+
+//+------------------------------------------------------------------+
+//|                 Remove the Symbol Changer interface               |
+//+------------------------------------------------------------------+
+void RemoveInterface()
+{
+    // Delete the chart label for the tool's interface
+    ObjectDelete(0, 'SymbolChangerLabel');
+}
+
+//+------------------------------------------------------------------+
+//|                Check if symbol switch is requested                |
+//+------------------------------------------------------------------+
+bool IsPressed()
+{
+    // Check if the mouse is pressed
+    if(EventChartCustom(EVENT_CLICK))
+    {
+        // Get the coordinates of the click event
+        int x, y;
+        EventChartCustom(EVENT_PARAMETERS, x, y);
+
+        // Check if the click event is within the tool's interface
+        if(x >= xPos && x <= xPos + size && y >= yPos && y <= yPos + size)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+//+------------------------------------------------------------------+
+//|                      Switch to the next symbol                    |
+//+------------------------------------------------------------------+
+void SwitchSymbol()
+{
+    // Get the current symbol
+    string currentSymbol = Symbol();
+
+    // Get the number of available symbols
+    int totalSymbols = SymbolsTotal();
+
+    // Find the index of the current symbol
+    int currentSymbolIndex = -1;
+    for(int i = 0; i < totalSymbols; i++)
+    {
+        if(SymbolName(i, false) == currentSymbol)
+        {
+            currentSymbolIndex = i;
+            break;
+        }
+    }
+
+    // Switch to the next symbol
+    int nextSymbolIndex = (currentSymbolIndex + 1) % totalSymbols;
+    string nextSymbol = SymbolName(nextSymbolIndex, false);
+    ChartSetSymbolPeriod(0, nextSymbol, PERIOD_CURRENT);
+
+    // Print the switch confirmation in the Experts tab
+    Print('Switched to symbol: ', nextSymbol);
+}
